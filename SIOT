@@ -1,0 +1,169 @@
+/*Datasets and sources
+Algorithm
+Train Data and Test datasets
+Citations*/
+
+##### Importing Libraries #########
+import numpy as np
+import pandas as pd
+import tensorflow as tf
+import glob,os
+import sys
+from sklearn.preprocessing import MinMaxScaler
+from keras.preprocessing import sequence
+from keras.models import sequential
+from keras.layers import Dense,Dropout,Embedding,LSTM,Bidirectional
+from keras.datasets import imdb
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.layers import Flatten
+from keras.layers.convolutional import Conv1D
+from keras.layers.convolutional import MaxPooling1D
+from keras.layers.embeddings import Embedding
+from keras.preprocessing import sequence
+
+######## Load the data ###############
+ds=pd.read_csv('UNSW_Training.csv')
+ds.tail()
+ds.head()
+ds.dtypes
+
+
+c1 = ds["pkSeqID"]
+c2 = ds["attack"]
+correlation=c1.corr(c2)
+print(correlation)
+
+obj_df = ds.select_dtypes(include=['object']).copy()
+obj_df.head()
+
+obj_df[obj_df.isnull().any(axis=1)]
+obj_df["category"] = obj_df["category"].astype('category')
+obj_df.dtypes
+
+obj_df["category_cat"] = obj_df["category"].cat.codes
+obj_df.head()
+
+obj_df["proto"] = obj_df["proto"].astype('category')
+obj_df.dtypes
+
+obj_df["proto_cat"] = obj_df["proto"].cat.codes
+obj_df.head()
+
+obj_df["saddr"] = obj_df["saddr"].astype('category')
+obj_df["sport"] = obj_df["sport"].astype('category')
+obj_df["daddr"] = obj_df["daddr"].astype('category')
+obj_df["dport"] = obj_df["dport"].astype('category')
+obj_df["subcategory"] = obj_df["subcategory"].astype('category')
+obj_df.dtypes
+
+obj_df["saddr_cat"] = obj_df["saddr"].cat.codes
+obj_df["sport_cat"] = obj_df["sport"].cat.codes
+obj_df["daddr_cat"] = obj_df["daddr"].cat.codes
+obj_df["dport_cat"] = obj_df["dport"].cat.codes
+obj_df["subcategory_cat"] = obj_df["subcategory"].cat.codes
+obj_df.head()
+
+df = obj_df.select_dtypes(include=['int8','int32','int16']).copy()
+df.head()
+
+df = ds.select_dtypes(include=['int64','float64']).copy()
+dff = obj_df.select_dtypes(include=['int8','int32','int16']).copy()
+Df=df.append(dff)
+Df.head()
+
+dff = obj_df.select_dtypes(include=['int8','int32','int16']).copy()
+dff.head()
+
+obj_df.append(df)
+
+top_words=7000
+(X_train, y_train), (X_test, y_test) = imdb.load_data(num_words=top_words)
+
+from sklearn.model_selection import train_test_split
+x = dff.drop('category_cat',axis=1)
+y= dff.category_cat
+
+X_train = x
+Y_train = y
+print('Shape of training data: ')
+print(X_train.shape)
+print(y_train.shape)
+
+df=pd.read_csv('UNSW_Testing.csv')
+X_test=df.drop('category',axis=1)
+Y_test=df.category
+print(X_test)
+print(Y_test) 
+
+##############################################################
+############### Defining Model ###############################
+from tensorflow import Tensor
+from tensorflow.keras.layers import Input, Conv2D, ReLU, BatchNormalization,\
+                                    Add, AveragePooling2D, Flatten, Dense
+from tensorflow.keras.models import Model
+
+
+# define model
+model = Sequential()
+model.add(Conv1D(filters=64, kernel_size=2, activation='relu', input_shape=(X_train, Y_train)))
+model.add(MaxPooling1D(pool_size=2))
+model.add(Flatten())
+model.add(Dense(50, activation='relu'))
+model.add(Dense(1))
+model.compile(optimizer='adam', loss='mse')
+
+model = Sequential()
+model.add(Conv1D(filters=64, kernel_size=2, activation='relu', input_shape=(x,y)))
+model.add(MaxPooling1D(pool_size=2))
+model.add(Flatten())
+model.add(Dense(50, activation='relu'))
+model.add(Dense(1))
+model.compile(optimizer='adam', loss='mse')
+# fit model
+
+########## Model Fit ######################################
+model.fit(X, y, epochs=1000, verbose=0)
+# demonstrate prediction
+x_input = array([[80, 85], [90, 95], [100, 105]])
+x_input = x_input.reshape((1, n_steps, n_features))
+yhat = model.predict(x_input, verbose=0)
+print(yhat)
+https://machinelearningmastery.com/how-to-develop-convolutional-neural-network-models-for-time-series-forecasting/
+
+from keras.models import Sequential
+from keras.layers import LSTM, Dense, Dropout, Masking, Embedding
+
+
+num_words = 7000
+model = Sequential()
+model.add(
+    Embedding(input_dim=num_words,
+              #input_length = training_length,
+              output_dim=100,
+              weights=[embedding_matrix],
+              trainable=False,
+              mask_zero=True))
+
+# Masking layer for pre-trained embeddings
+model.add(Masking(mask_value=0.0))
+
+# Recurrent layer
+model.add(LSTM(64, return_sequences=False, 
+               dropout=0.1, recurrent_dropout=0.1))
+
+# Fully connected layer
+model.add(Dense(64, activation='relu'))
+
+# Dropout for regularization
+model.add(Dropout(0.5))
+
+# Output layer
+model.add(Dense(num_words, activation='softmax'))
+
+# Compile the model
+model.compile(
+    optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+
+
